@@ -10,6 +10,7 @@ import com.ledger.bank_ledger.repository.LedgerEventRepository;
 import com.ledger.bank_ledger.service.LedgerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,7 +39,7 @@ public class LedgerController {
     // Deposit money into an account
     @Operation(summary = "Deposit money into account")
     @PostMapping("/deposit")
-    public ResponseEntity<String> deposit(@RequestBody DepositRequest request) {
+    public ResponseEntity<String> deposit(@Valid @RequestBody DepositRequest request) {
         ledgerService.deposit(request.accountId(), request.amount());
         return ResponseEntity.ok("Deposit successful");
     }
@@ -46,7 +47,7 @@ public class LedgerController {
     // Transfer money between two accounts
     @Operation(summary = "Transfer money between accounts")
     @PostMapping("/transfer")
-    public ResponseEntity<String> transfer(@RequestBody TransferRequest request) {
+    public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest request) {
         ledgerService.transfer(request.fromId(), request.toId(), request.amount(), request.idempotencyKey());
         return ResponseEntity.ok("Transfer successful");
     }
@@ -60,7 +61,7 @@ public class LedgerController {
 
     @Operation(summary = "Deposit money into account")
     @PostMapping("/account")
-    public ResponseEntity<Account> createAccount(@RequestBody CreateAccountRequest request) {
+    public ResponseEntity<Account> createAccount(@Valid @RequestBody CreateAccountRequest request) {
         return ResponseEntity.ok(ledgerService.createAccount(request.name()));
     }
 
