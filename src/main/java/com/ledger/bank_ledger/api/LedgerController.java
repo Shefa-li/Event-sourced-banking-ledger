@@ -5,8 +5,10 @@ import com.ledger.bank_ledger.api.dto.DepositRequest;
 import com.ledger.bank_ledger.api.dto.PageResponse;
 import com.ledger.bank_ledger.api.dto.TransferRequest;
 import com.ledger.bank_ledger.domain.Account;
+import com.ledger.bank_ledger.domain.User;
 import com.ledger.bank_ledger.events.LedgerEvent;
 import com.ledger.bank_ledger.repository.LedgerEventRepository;
+import com.ledger.bank_ledger.repository.UserRepository;
 import com.ledger.bank_ledger.service.LedgerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -31,9 +34,12 @@ public class LedgerController {
 
     private final LedgerEventRepository eventRepository;
 
-    public LedgerController(LedgerService ledgerService, LedgerEventRepository eventRepository) {
+    private final UserRepository userRepository;
+
+    public LedgerController(LedgerService ledgerService, LedgerEventRepository eventRepository, UserRepository userRepository) {
         this.ledgerService = ledgerService;
         this.eventRepository = eventRepository;
+        this.userRepository=userRepository;
     }
 
     // Deposit money into an account
@@ -47,8 +53,16 @@ public class LedgerController {
     // Transfer money between two accounts
     @Operation(summary = "Transfer money between accounts")
     @PostMapping("/transfer")
-    public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest request) {
-        ledgerService.transfer(request.fromId(), request.toId(), request.amount(), request.idempotencyKey());
+    public ResponseEntity<String> transfer(@Valid @RequestBody TransferRequest request, @AuthenticationPrincipal String username) {
+        // get logged - in user
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // get their account
+        Account senderAccount = ledgerService.getAccountByUserId(user.getId());
+
+
+        ledgerService.transfer( senderAccount.getId(),request.toId(), request.amount(), request.idempotencyKey());
         return ResponseEntity.ok("Transfer successful");
     }
 

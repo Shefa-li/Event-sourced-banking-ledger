@@ -17,6 +17,9 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column
+    private Long userId;
+
     @Column(nullable = false, unique = true)
     private String name;
 

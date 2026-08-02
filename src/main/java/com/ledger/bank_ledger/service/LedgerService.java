@@ -69,6 +69,11 @@ public class LedgerService {
         return accountRepository.save(Account.builder().name(name).build());
     }
 
+    public Account getAccountByUserId(Long userId) {
+        return accountRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("No account found for this user"));
+    }
+
     // Deposit
     @Transactional
     public void deposit(UUID accountId, BigDecimal amount) {
