@@ -5,7 +5,9 @@ import com.ledger.bank_ledger.events.LedgerEvent;
 import com.ledger.bank_ledger.repository.AccountRepository;
 import com.ledger.bank_ledger.repository.LedgerEventRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.ledger.bank_ledger.service.NotificationService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -52,13 +54,16 @@ public class LedgerService {
     private final LedgerEventRepository eventRepository;
     private final AccountRepository accountRepository;
     private final AccountProjection projection;
+    private final NotificationService notificationService;
 
     public LedgerService(LedgerEventRepository eventRepository,
                          AccountRepository accountRepository,
-                         AccountProjection projection) {
+                         AccountProjection projection,
+                         NotificationService notificationService) {
         this.eventRepository = eventRepository;
         this.accountRepository = accountRepository;
         this.projection = projection;
+        this.notificationService = notificationService;
     }
 
     // Create account
@@ -94,6 +99,8 @@ public class LedgerService {
                 .type("CREDIT")
                 .timestamp(LocalDateTime.now())
                 .build());
+
+        notificationService.sendCreditNotification(accountId,amount);
     }
 
     // Transfer
@@ -131,6 +138,9 @@ public class LedgerService {
 
         eventRepository.save(LedgerEvent.builder()
                 .accountId(toId).amount(amount).type("CREDIT").idempotencyKey(idempotencyKey + "_credit").timestamp(LocalDateTime.now()).build());
+
+        notificationService.sendDebitNotification(fromId, amount);
+        notificationService.sendCreditNotification(toId, amount);
 
     }
     public Account deactivateAccount(UUID accountId) {

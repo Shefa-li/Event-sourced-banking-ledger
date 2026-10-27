@@ -21,7 +21,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()      // login/register open
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/notification/**").permitAll()  // login/register open
                         .requestMatchers("/swagger-ui/**").permitAll()    // swagger open
                         .requestMatchers("/v3/api-docs/**").permitAll()   // swagger open
                         .anyRequest().authenticated()                     // everything else needs token
