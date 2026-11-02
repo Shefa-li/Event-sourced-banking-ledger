@@ -5,48 +5,11 @@ import com.ledger.bank_ledger.events.LedgerEvent;
 import com.ledger.bank_ledger.repository.AccountRepository;
 import com.ledger.bank_ledger.repository.LedgerEventRepository;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import com.ledger.bank_ledger.service.NotificationService;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
-
-//@Service
-//public class LedgerService {
-//
-//    private final EventStore eventStore;
-//    private final AccountProjection projection;
-//
-//    public LedgerService(EventStore eventStore, AccountProjection projection) {
-//        this.eventStore = eventStore;
-//        this.projection = projection;
-//    }
-//
-//    public void deposit(UUID accountId, BigDecimal amount) {
-//        if (amount.compareTo(BigDecimal.ZERO) <= 0)
-//            throw new IllegalArgumentException("Amount must be positive");
-//
-//        eventStore.append(new MoneyCreditedEvent(accountId, amount, LocalDateTime.now()));
-//    }
-//
-//    public void transfer(UUID fromId, UUID toId, BigDecimal amount) {
-//        if (amount.compareTo(BigDecimal.ZERO) <= 0)
-//            throw new IllegalArgumentException("Amount must be positive");
-//
-//        BigDecimal senderBalance = projection.getBalance(fromId);
-//        if (senderBalance.compareTo(amount) < 0)
-//            throw new IllegalStateException("Insufficient funds");
-//
-//        eventStore.append(new MoneyDebitedEvent(fromId, amount, LocalDateTime.now()));
-//        eventStore.append(new MoneyCreditedEvent(toId, amount, LocalDateTime.now()));
-//    }
-//
-//    public BigDecimal getBalance(UUID accountId) {
-//        return projection.getBalance(accountId);
-//    }
-//}
 
 @Service
 public class LedgerService {
@@ -66,12 +29,22 @@ public class LedgerService {
         this.notificationService = notificationService;
     }
 
+    public Optional<Account> findAccountByUserId(Long userId) {
+        return accountRepository.findByUserId(userId);
+    }
     // Create account
-    public Account createAccount(String name) {
+    public Account createAccount(String name, Long userId) {
+        if (accountRepository.findByUserId(userId).isPresent())
+            throw new IllegalStateException("You already have an account");
         if (accountRepository.findByName(name).isPresent())
+            throw new IllegalArgumentException("Account name already taken");
+
+        return accountRepository.save(Account.builder().name(name).userId(userId).build());
+
+       /* if (accountRepository.findByName(name).isPresent())
             throw new IllegalArgumentException("Account already exists: " + name);
 
-        return accountRepository.save(Account.builder().name(name).build());
+        return accountRepository.save(Account.builder().name(name).build());*/
     }
 
     public Account getAccountByUserId(Long userId) {
@@ -109,6 +82,8 @@ public class LedgerService {
 
         Account sender = accountRepository.findById(fromId)
                 .orElseThrow(() -> new IllegalArgumentException("Sender not found"));
+        if (fromId.equals(toId))
+            throw new IllegalArgumentException("Cannot transfer to your own account");
         if (!sender.isActive())
             throw new IllegalStateException("Sender account is inactive");
 

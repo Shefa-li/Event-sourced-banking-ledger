@@ -73,18 +73,28 @@ public class LedgerController {
         return ResponseEntity.ok(ledgerService.getBalance(accountId));
     }
 
-    @Operation(summary = "Deposit money into account")
-    @PostMapping("/account")
-    public ResponseEntity<Account> createAccount(@Valid @RequestBody CreateAccountRequest request) {
-        return ResponseEntity.ok(ledgerService.createAccount(request.name()));
+    @GetMapping("/my-account")
+    public ResponseEntity<Account> myAccount(@AuthenticationPrincipal String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return ledgerService.findAccountByUserId(user.getId())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());   // 404 → frontend shows "create account"
     }
 
+    @Operation(summary = "Deposit money into account")
+    @PostMapping("/account")
+    public ResponseEntity<Account> createAccount(@Valid @RequestBody CreateAccountRequest request,
+                                                 @AuthenticationPrincipal String username) {
+       // return ResponseEntity.ok(ledgerService.createAccount(request.name()));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-//    @Operation(summary = "Get transaction history")
-//    @GetMapping("/history/{accountId}")
-//    public ResponseEntity<List<LedgerEvent>> getHistory(@PathVariable UUID accountId) {
-//        return ResponseEntity.ok(eventRepository.findByAccountId(accountId));
-//    }
+        return ResponseEntity.ok(ledgerService.createAccount(request.name(), user.getId()));
+
+    }
+
 
     @Operation(summary = "Get paginated transaction history")
     @GetMapping("/history/{accountId}")
