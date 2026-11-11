@@ -1,5 +1,6 @@
 package com.ledger.bank_ledger.api;
 
+import com.ledger.bank_ledger.domain.Notification;
 import com.ledger.bank_ledger.events.NotificationEvent;
 import com.ledger.bank_ledger.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,13 +19,13 @@ public class NotificationController {
 
     @Operation(summary = "Get all notifications for account")
     @GetMapping("/{accountId}")
-    public ResponseEntity<List<NotificationEvent>> getAll(@PathVariable UUID accountId) {
+    public ResponseEntity<List<Notification>> getAll(@PathVariable UUID accountId) {
         return ResponseEntity.ok(notificationService.getNotifications(accountId));
     }
 
     @Operation(summary = "Get unread notifications")
     @GetMapping("/{accountId}/unread")
-    public ResponseEntity<List<NotificationEvent>> getUnread(@PathVariable UUID accountId) {
+    public ResponseEntity<List<Notification>> getUnread(@PathVariable UUID accountId) {
         return ResponseEntity.ok(notificationService.getUnreadNotifications(accountId));
     }
 

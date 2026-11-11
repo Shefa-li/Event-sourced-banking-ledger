@@ -24,9 +24,11 @@ public class AuthController {
         if (userRepository.findByUsername(request.username()).isPresent())
             throw new IllegalArgumentException("Username already exists");
 
+
         userRepository.save(User.builder()
                 .username(request.username())
                 .password(passwordEncoder.encode(request.password()))
+                .email(request.email())          // ← add this line
                 .build());
 
         return ResponseEntity.ok("User registered successfully");

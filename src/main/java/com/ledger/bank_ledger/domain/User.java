@@ -20,6 +20,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(unique = true)
+    private String email;
+
     @Column(nullable = false)
     @Builder.Default
     private String role = "ROLE_USER";
